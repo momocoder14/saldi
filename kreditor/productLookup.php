@@ -4,7 +4,7 @@
 //               \__ \/ _ \| |_| |) | | _ | |) |  <
 //               |___/_/ \_|___|___/|_||_||___/|_\_\
 //
-// --- kreditor/productLookup.php --- patch 4.1.1 --- 2025-12-11 ---
+// --- kreditor/productLookup.php --- patch 5.0.0 --- 2026-07-28 ---
 // LICENSE
 //  
 // This program is free software. You can redistribute it and / or
@@ -23,6 +23,7 @@
 //
 // Copyright (c) 2003-2025 Saldi.dk ApS
 // 20251210 LOE Moved from ordre.php and improved to use grid.php structure
+// 20260728 MJ Fix: leverandoerfilter ignoreret pga. gemt tilstand i datatables-tabel; leverandoer-betingelse indlejret direkte i SQL-forespoergsel
 
 @session_start();
 $s_id = session_id();
@@ -348,9 +349,17 @@ if ($konto_id && $vis) {
 
 $where_sql = !empty($where_conditions) ? "WHERE " . implode(' AND ', $where_conditions) : "";
 
-// Build query with {{SORT}} placeholder and COALESCE to prevent NULL values
+// Supplier condition baked directly into SQL so it cannot be cleared by saved filter state in datatables
+$supplier_clause = "";
+if ($konto_id && $vis) {
+    $supplier_clause = "vl.lev_id = $konto_id AND ";
+} elseif ($konto_id) {
+    $supplier_clause = "(vl.lev_id = $konto_id OR vl.lev_id IS NULL OR vl.lev_id = 0) AND ";
+}
+
+// Build query with {{WHERE}} and {{SORT}} placeholders
 $query = "
-SELECT 
+SELECT
     v.id as vare_id,
     COALESCE(v.varenr, '') as varenr,
     COALESCE(vl.lev_varenr, '') as lev_varenr,
@@ -365,7 +374,7 @@ SELECT
 FROM varer v
 LEFT JOIN vare_lev vl ON v.id = vl.vare_id
 LEFT JOIN adresser a ON vl.lev_id = a.id
-WHERE {{WHERE}}
+WHERE {$supplier_clause}{{WHERE}}
 ORDER BY {{SORT}}";
 
 // Define filters for grid.php
@@ -404,38 +413,6 @@ if ($find && ($fokus == 'beskrivelse' || $fokus == 'varenr' || strstr($fokus, 'l
     );
 }
 
-// Add supplier visibility filter
-if ($konto_id) {
-    if ($vis) {
-        $filters[] = array(
-            "type" => "custom",
-            "filterName" => "supplier_filter",
-            "joinOperator" => "AND",
-            "options" => array(
-                array(
-                    "name" => "specific_supplier",
-                    "checked" => "checked",
-                    "sqlOn" => "vl.lev_id = $konto_id",
-                    "sqlOff" => ""
-                )
-            )
-        );
-    } else {
-        $filters[] = array(
-            "type" => "custom",
-            "filterName" => "supplier_filter",
-            "joinOperator" => "AND",
-            "options" => array(
-                array(
-                    "name" => "supplier_or_unassigned",
-                    "checked" => "checked",
-                    "sqlOn" => "(vl.lev_id = $konto_id OR vl.lev_id IS NULL OR vl.lev_id = 0)",
-                    "sqlOff" => ""
-                )
-            )
-        );
-    }
-}
 
 // Create data grid configuration
 $data = array(
