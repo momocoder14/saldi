@@ -4,7 +4,7 @@
 //               \__ \/ _ \| |_| |) | | _ | |) |  <
 //               |___/_/ \_|___|___/|_||_||___/|_\_\
 //
-// --- debitor/ordre.php --- patch 5.0.0 --- 2026-07-08 ---
+// --- debitor/ordre.php --- patch 5.0.0 --- 2026-07-31 ---
 // LICENSE
 //
 // This program is free software. You can redistribute it and / or
@@ -100,6 +100,7 @@
 // 20260702 PHR Disabled "if ($vis_saet) $fakturadato = date("d-m-Y");"
 // 20260706 PHR Added $tmp to avoid division by zero
 // 20260708 MJ Default fakturadato to today when pressing Invoice and the field is empty.
+// 20260731 MJ Rettet "Performed by"-label til findtekst('3367|Udført af') i visning og redigering
 // 20260709 Sawaneh Show delivery address + Extra fields together on open orders (setting-controlled), fixed the Show-delivery-address checkbox, and moved the plukliste/writing-field buttons to the action row
 // 20260715 PHR Valuto was omittet when copying order
 
@@ -4053,7 +4054,7 @@ function ordreside($id, $regnskab)
 		print "&nbsp;+&nbsp;$betalingsdage\n";
 		print "</td></tr>";
 		print "<tr class='tableTexting2'><td><b>" . findtekst('1097|Vor ref.', $sprog_id) . "</b></td><td>$ref &nbsp; $afd_navn</td></tr>\n";
-		print "<tr class='tableTexting2'><td><b>Performed by.</b></td><td>$hvem</td></tr>\n";
+		print "<tr class='tableTexting2'><td><b>" . findtekst('3367|Udført af', $sprog_id) . "</b></td><td>$hvem</td></tr>\n";
 		print "<tr class='tableTexting'><td><b>" . findtekst('828|Fakturanr.', $sprog_id) . "</b></td><td>$fakturanr</td></tr>\n";
 		$tmp = dkdecimal($valutakurs, 2);
 		if ($valuta) print "<tr class='tableTexting2'><td><b>" . findtekst('552|Valuta / Kurs', $sprog_id) . "</b></td><td>$valuta / $tmp</td></tr>\n";
@@ -5163,7 +5164,7 @@ function ordreside($id, $regnskab)
 			print "<INPUT TYPE = 'hidden' NAME = 'oldhvem' VALUE = \"$hvem\">";
 			for ($x=0;$x<count($ansat);$x++) {
 				if (!$x) {
-				print "<tr><td>Performed by</td>\n";
+				print "<tr><td>" . findtekst('3367|Udført af', $sprog_id) . "</td>\n";
 				print "<td><select style=\"width:130px;\" class = 'inputbox' name=\"hvem\" $disabled>\n";
 				print "<option>$hvem</option>\n";
 				// Always offer a blank option so 'Performed by' can be cleared back to blank. #20260629
