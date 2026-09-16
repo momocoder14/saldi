@@ -62,10 +62,16 @@
 //                  booked amounts: sum of rounded line sums, VAT on the total (1-3 oere diff).
 //                  Supplier orders no longer print VAT-inclusive prices (customer setting).
 // 20260914 CDX/LH SST-784: Escape parentheses and backslashes only in PostScript output.
+// 20260916 CDX/MJ SST-784: Escape the form-variable write too. skriv() has two PostScript
+//                  output boundaries - the order-line text and the page-transport form
+//                  variables - and only the first was escaped. Shared helper so they cannot
+//                  drift apart again.
 
 #use PHPMailer\PHPMailer\PHPMailer;
 #use PHPMailer\PHPMailer\Exception; 
 
+
+include_once(__DIR__ . "/stdFunc/psEscapeTekst.php");
 
 if (!function_exists('skriv')) {
 	function skriv($id, $str, $fed, $italic, $color, $tekst, $tekstinfo, $x, $y, $format, $form_font, $formular, $line)
@@ -322,7 +328,7 @@ if (!function_exists('skriv')) {
 							$ny_str = $str;
 						# udskrivning af formular variabler
 						if ($row['xa']) {
-							fwrite($psfp, "/$form_font\n$row[str] scalefont\nsetfont\nnewpath\n" . $row['xa'] * 2.86 . " " . $row['ya'] * 2.86 . " moveto (" . utf8_iso8859($ny_streng) . ") $format show\n");
+							fwrite($psfp, "/$form_font\n$row[str] scalefont\nsetfont\nnewpath\n" . $row['xa'] * 2.86 . " " . $row['ya'] * 2.86 . " moveto (" . ps_escape_tekst(utf8_iso8859($ny_streng)) . ") $format show\n");
 							#	fwrite($htmfp,"<div style=\"position:absolute;top:".$row['xa']."mm;left:".$row['xb']."mm;\">".__line__."$ny_streng</div>\n");
 							$a = $row['xa'];
 							$b = 297 - $row['ya'];
@@ -385,7 +391,7 @@ if (!function_exists('skriv')) {
 		}
 		if ($x && $tekst && $y2 / 2.86 > $Opkt) {
 			if ($x != '22') {
-				$psTekst = strtr(utf8_iso8859($tekst), array('\\' => '\\\\', '(' => '\\(', ')' => '\\)'));
+				$psTekst = ps_escape_tekst(utf8_iso8859($tekst));
 				fwrite($psfp, "/$form_font\n$str scalefont\nsetfont\nnewpath\n$x $y2 moveto (" . $psTekst . ") $format show\n");
 			}
 			$a = $x / 2.86;
